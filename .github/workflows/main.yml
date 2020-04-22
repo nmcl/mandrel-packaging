@@ -1,0 +1,26 @@
+name: Build and test
+
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libkrb5-dev
+        sudo pip install wheel setuptools cekit odcs docker
+        cekit --version
+    - name: Build image
+      run: make build-image
+    - name: Build Mandrel
+      env:
+        MAVEN_REPOSITORY: ${{ env.HOME }}/.m2/repository
+        MANDREL_VERSION: 19.3.1.redhat-999
+      run: |
+        docker run -i -e SKIP_PACKAGING=1 -v $(pwd):/tmp/mandrel-packaging -v ${MAVEN_REPOSITORY}:/home/mandrel/.m2/repository mandrel-packaging ./run.sh --install --version ${MANDREL_VERSION} --verbose
