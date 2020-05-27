@@ -1,0 +1,38 @@
+---
+- name: Setup machine for mandrel-packaging
+  hosts: all
+  vars:
+    configuration: mandrel20.1-openjdk
+    mx_path: /opt/mx
+    mandrel_path: /tmp/mandrel
+    mandrel_repo: https://github.com/graalvm/mandrel.git
+    jdk_path: /opt/jdk
+    user: mandrel
+
+
+  pre_tasks:
+    - name: Include variables for configuration
+      include_vars:
+        file: "configurations/{{ configuration }}.yml"
+    - name: Install core dependencies
+      dnf:
+        name: tar
+        state: latest
+
+  roles:
+    - user
+    - jdk
+    - mx
+    - maven
+
+  tasks:
+    - name: Clone mandrel repository
+      git:
+        repo: "{{ mandrel_repo }}"
+        dest: "{{ mandrel_path }}"
+        version: "{{ mandrel_version }}"
+        depth: 1
+    - name: Copy build.java
+      copy:
+        src: "{{ playbook_dir }}/../src/build.java"
+        dest: "/home/{{ user }}"
